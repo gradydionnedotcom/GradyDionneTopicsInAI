@@ -1,6 +1,6 @@
 #Toads and Frogs Game
 
-import SLL
+import DLL
 import random
 
 """
@@ -14,11 +14,11 @@ position for the Left player. The function should produce False otherwise.
 """
 
 def has_left_option(gameboard: str):
-    moves_list = SLL.SinglyLinkedList()
+    moves_list = DLL.DoublyLinkedList()
     for item in gameboard.split(","):
         moves_list.add_last(item)
 
-    current = moves_list.head
+    current = moves_list.header
     while current is not None and current.next is not None:
         if current.value == 'T':
             if current.next.value == ' ':
@@ -39,14 +39,14 @@ all possible options for the Left player from the given position.
 '''
 
 def get_left_options(gameboard: str):
-    moves_list = SLL.SinglyLinkedList()
+    moves_list = DLL.DoublyLinkedList()
     for item in gameboard.split(","):
         moves_list.add_last(item)
 
     possible_moves = []
     position = 1
 
-    current = moves_list.head
+    current = moves_list.header
     while current is not None and current.next is not None:
         if current.value == 'T':
             if current.next.value == ' ':
