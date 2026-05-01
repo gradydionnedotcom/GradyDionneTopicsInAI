@@ -1,8 +1,5 @@
 #Toads and Frogs Game
-
-import DLL
 import random
-
 """
 Problem 1:
 
@@ -14,19 +11,16 @@ position for the Left player. The function should produce False otherwise.
 """
 
 def has_left_option(gameboard: str):
-    moves_list = DLL.DoublyLinkedList()
-    for item in gameboard.split(","):
-        moves_list.add_last(item)
 
-    current = moves_list.header
-    while current is not None and current.next is not None:
-        if current.value == 'T':
-            if current.next.value == ' ':
+    board = gameboard.split(",")
+
+    for i in range (len(board) - 1):
+        if board[i] == 'T':
+            if board[i + 1] == '_':
                 return True
-            elif current.next.value == 'F' and current.next.next is not None:
-                if current.next.next.value == ' ':
+            elif board[i + 1] == 'F' and board[i + 2] is not None:
+                if board[i + 2] == '_':
                     return True
-        current = current.next
     return False
 
 '''
@@ -39,28 +33,35 @@ all possible options for the Left player from the given position.
 '''
 
 def get_left_options(gameboard: str):
-    moves_list = DLL.DoublyLinkedList()
-    for item in gameboard.split(","):
-        moves_list.add_last(item)
+    board = gameboard.split(",")
 
+    # a list of boards
     possible_moves = []
-    position = 1
 
-    current = moves_list.header
-    while current is not None and current.next is not None:
-        if current.value == 'T':
-            if current.next.value == ' ':
-                possible_moves.append([position, 'move to the next empty space'])
-            elif current.next.value == 'F' and current.next.next is not None:
-                if current.next.next.value == ' ':
-                    possible_moves.append([position, 'jump over a frog to empty an space'])
-        current = current.next
-        position += 1
+    for i in range (len(board)-1):
+        if board[i] == 'T':
+            if board[i + 1] == '_':
+                # make a new gameboard here with the new moves, a child, and add it to a list of options
+                child = board.copy()
+                child[i] = '_'
+                child[i + 1] = 'T'
+                possible_moves.append(",".join(child))
+
+                # old function material
+                # possible_moves.append([position, 'move to the next empty space'])
+            elif board[i + 1] == 'F' and board[i + 2] is not None:
+                if board[i + 2] == '_':
+
+                    # make a new gameboard here with the new moves, a child, and add it to a list of options
+                    child = board.copy()
+                    child[i] = '_'
+                    child[i + 2] = 'T'
+                    possible_moves.append(",".join(child))
+                    
+                    # old function material
+                    # possible_moves.append([position, 'jump over a frog to empty an space'])
     
-    if possible_moves:
-        return [f'Toad in square {pos} can {mov}' for pos, mov in possible_moves]
-    
-    return 'There are no possible moves'
+    return possible_moves
 
 '''
 Problem 3
@@ -73,10 +74,11 @@ def has_left_option_test():
 
     for i in range(3):
         moves = ''
-        value = ['T',' ','F']
+        value = ['T','_','F']
         for j in range(random.randint(7, 15)):
             moves += (random.choice(value))
-            moves += ','
+            moves += (',')
+
         
         test_case = has_left_option(moves)
 
@@ -98,10 +100,10 @@ def get_left_option_test():
 
     for i in range(3):
         moves = ''
-        value = ['T',' ','F']
+        value = ['T','_','F']
         for i in range(random.randint(7, 15)):
             moves += (random.choice(value))
-            moves += ','
+            moves += (',')
         
         test_case = get_left_options(moves)
 
@@ -110,6 +112,7 @@ def get_left_option_test():
             for option in test_case:
                 print(f"  {option}")
         else:
+
             print( "There are no possible moves")
 
     return

@@ -15,18 +15,15 @@ position for the Right player. The function should produce False otherwise.
 
 def has_right_option(gameboard: str):
     moves_list = DLL.DoublyLinkedList()
-    for item in gameboard.split(","):
-        moves_list.add_last(item)
+    board = gameboard.split(",")
 
-    current = moves_list.trailer
-    while current is not None and current.prev is not None:
-        if current.value == 'F':
-            if current.prev.value == ' ':
+    for i in range (len(board)-1, 1, -1):
+        if board[i] == 'F':
+            if board[i - 1] == '_':
                 return True
-            elif current.prev.value == 'F' and current.prev.prev is not None:
-                if current.prev.prev.value == ' ':
+            elif board[i - 1] == 'F' and board[i - 2] is not None:
+                if board[i - 2] == '_':
                     return True
-        current = current.prev
     return False
 
 '''
@@ -39,28 +36,35 @@ all possible options for the Right player from the given position.
 '''
 
 def get_right_options(gameboard: str):
-    moves_list = DLL.DoublyLinkedList()
-    for item in gameboard.split(","):
-        moves_list.add_last(item)
+
+    board = gameboard.split(",")
 
     possible_moves = []
-    position = moves_list.size + 1
 
-    current = moves_list.trailer
-    while current is not None and current.prev is not None:
-        if current.value == 'F':
-            if current.prev.value == ' ':
-                possible_moves.append([position, 'move to the next empty space'])
-            elif current.prev.value == 'T' and current.prev.prev is not None:
-                if current.prev.prev.value == ' ':
-                    possible_moves.append([position, 'jump over a toad to empty an space'])
-        current = current.prev
-        position -= 1
+    for i in range (len(board)-1, 1, -1):
+        if board[i] == 'F':
+            if board[i - 1] == '_':
+
+                child = board.copy()
+                child[i] = '_'
+                child[i - 1] = 'F'
+                possible_moves.append(",".join(child))
+
+                # old stuff
+                # possible_moves.append([position, 'move to the next empty space'])
+
+            elif board[i - 1] == 'T' and board[i - 2] is not None:
+                if board[i - 2] == '_':
+                    
+                    child = board.copy()
+                    child[i] = '_'
+                    child[i - 2] = 'T'
+                    possible_moves.append(",".join(child))
+
+                    # old stuff again
+                    # possible_moves.append([position, 'jump over a toad to empty an space'])
     
-    if possible_moves:
-        return [f'Frog in square {pos} can {mov}' for pos, mov in possible_moves]
-    
-    return 'There are no possible moves for the right player'
+    return possible_moves
 
 '''
 Problem 3
@@ -73,7 +77,7 @@ def has_right_option_test():
 
     for i in range(3):
         moves = ''
-        value = ['T',' ','F']
+        value = ['T','_','F']
         for j in range(random.randint(7, 15)):
             moves += (random.choice(value))
             moves += ','
@@ -98,7 +102,7 @@ def get_right_option_test():
 
     for i in range(3):
         moves = ''
-        value = ['T',' ','F']
+        value = ['T','_','F']
         for i in range(random.randint(7, 15)):
             moves += (random.choice(value))
             moves += ','
