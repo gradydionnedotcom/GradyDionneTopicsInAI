@@ -80,7 +80,7 @@ def test_all_combos():
 
     dataset = []
 
-    for i in range(3, 17):
+    for i in range(3, 19):
 
         start = time.time()
         all_combos(i)
@@ -96,8 +96,28 @@ def test_all_combos():
 print('This is the test for function 1')
 for i in range (len(dataset)):
     print(f'Time for game of size {dataset[i][1]}: {dataset[i][0]:.4f} Seconds')
-'''
 
+
+This is the test for function 1
+Time for game of size 3: 0.0000 Seconds
+Time for game of size 4: 0.0000 Seconds
+Time for game of size 5: 0.0000 Seconds
+Time for game of size 6: 0.0001 Seconds
+Time for game of size 7: 0.0003 Seconds
+Time for game of size 8: 0.0013 Seconds
+Time for game of size 9: 0.0037 Seconds
+Time for game of size 10: 0.0121 Seconds
+Time for game of size 11: 0.0606 Seconds
+Time for game of size 12: 0.1086 Seconds
+Time for game of size 13: 0.3447 Seconds
+Time for game of size 14: 1.1732 Seconds
+Time for game of size 15: 3.7058 Seconds
+Time for game of size 16: 11.6038 Seconds
+Time for game of size 17: 36.6015 Seconds
+Time for game of size 18: 136.1437 Seconds
+
+** I tried many times to get it to run longer than this but it crashed every time
+'''
 
 # test for function 2
 
@@ -105,7 +125,7 @@ def test_all_combos_with_give_values():
 
     dataset = []
 
-    for i in range(3, 17):
+    for i in range(3, 22):
 
         start = time.time()
         all_combos_with_given_values(i, round(i/3), round(i/3))
@@ -115,13 +135,36 @@ def test_all_combos_with_give_values():
 
     return dataset
 
-# dataset = test_all_combos_with_give_values()
+dataset = test_all_combos_with_give_values()
 
-'''
+
 print('This is the test for function 2')
 for i in range (len(dataset)):
     print(f'Time for game of size {dataset[i][1]}: {dataset[i][0]:.4f} Seconds')
 '''
+This is the test for function 2
+Time for game of size 3: 0.0000 Seconds
+Time for game of size 4: 0.0000 Seconds
+Time for game of size 5: 0.0000 Seconds
+Time for game of size 6: 0.0001 Seconds
+Time for game of size 7: 0.0003 Seconds
+Time for game of size 8: 0.0009 Seconds
+Time for game of size 9: 0.0025 Seconds
+Time for game of size 10: 0.0070 Seconds
+Time for game of size 11: 0.0188 Seconds
+Time for game of size 12: 0.0868 Seconds
+Time for game of size 13: 0.1561 Seconds
+Time for game of size 14: 0.4176 Seconds
+Time for game of size 15: 1.3059 Seconds
+Time for game of size 16: 3.5688 Seconds
+Time for game of size 17: 10.5294 Seconds
+Time for game of size 18: 32.0111 Seconds
+Time for game of size 19: 88.8040 Seconds
+Time for game of size 20: 260.2243 Seconds
+Time for game of size 21: 835.2847 Seconds
+'''
+
+
 
 '''
 Problem 4:
@@ -130,8 +173,6 @@ Write a function which performs breadth first search from a given Toads and Frog
 The function does not need to determine which player wins. It only needs to visit each of the nodes in the 
 game tree in breadth first order. The function should return the number of total nodes visited.
 '''
-
-#TODO
 
 # stack and queue class
 
@@ -202,7 +243,7 @@ def has_right_option(gameboard: str):
         if board[i] == 'F':
             if board[i - 1] == '_':
                 return True
-            elif board[i - 1] == 'F' and board[i - 2] is not None:
+            elif board[i - 1] == 'T' and i - 2 >= 0:
                 if board[i - 2] == '_':
                     return True
     return False
@@ -259,18 +300,98 @@ def get_right_options(gameboard: str):
                 # old stuff
                 # possible_moves.append([position, 'move to the next empty space'])
 
-            elif board[i - 1] == 'T' and board[i - 2] is not None:
+            elif board[i - 1] == 'T' and i - 2 >= 0:
                 if board[i - 2] == '_':
                     
                     child = board.copy()
                     child[i] = '_'
-                    child[i - 2] = 'T'
+                    child[i - 2] = 'F'
                     possible_moves.append(",".join(child))
 
                     # old stuff again
                     # possible_moves.append([position, 'jump over a toad to empty an space'])
     
     return possible_moves
+
+
+# searches functions
+
+def start_breadth_first_search(gameboard: str):
+    # initialize queue for dfs
+    children = Queue()
+    visited_states = set()
+
+    visited_states.add(gameboard)
+
+    # check for left options and add to stack
+    if has_left_options(gameboard):
+        children_list = get_left_options(gameboard)
+        for child in children_list:
+            children.enqueue(child)
+
+    # check for right options and add to stack
+    elif has_right_option(gameboard):
+        children_list = get_right_options(gameboard)
+        for child in children_list:
+            children.enqueue(child)
+
+    return children, visited_states
+
+def breadth_first_search(children: Queue, visited_states: set):
+
+    board_to_check = children.dequeue()
+
+    # make sure we haven't been to this gameboard already
+    if board_to_check in visited_states:
+        return 0
+    visited_states.add(board_to_check)
+
+    # check for left options and add to stack
+    if has_left_options(board_to_check):
+        children_list = get_left_options(board_to_check)
+        for child in children_list:
+            children.enqueue(child)
+
+    # check for right options and add to stack
+    if has_right_option(board_to_check):
+        children_list = get_right_options(board_to_check)
+        for child in children_list:
+            children.enqueue(child)
+    
+    return 1
+
+def main_breadth():
+    
+    # generate random board
+    board = ''
+    value = ['T','_','F']
+    for i in range(10):
+        board += (random.choice(value))
+        if i < 9:
+            board += ',' 
+
+    print(board)
+
+    # start search
+    children, visited_states = start_breadth_first_search(board)
+
+    nodes_visited = 1
+
+    # continue search until all nodes have been visited
+    while not children.is_empty():
+        nodes_visited += breadth_first_search(children, visited_states)
+
+    if nodes_visited is not None:
+        print(nodes_visited)
+
+
+'''
+Problem 5:
+
+Write a function which performs depth first search from a given Toads and Frogs position of size n. 
+The function does not need to determine which player wins. It only needs to visit each of the nodes in the game 
+tree in depth first order. The function should return the number of total nodes visited.
+'''
 
 def start_depth_first_search(gameboard: str):
         
@@ -310,7 +431,7 @@ def depth_first_search(children: Stack, visited_states: set):
             children.push(child)
 
     # check for right options and add to stack
-    elif has_right_option(board_to_check):
+    if has_right_option(board_to_check):
         children_list = get_right_options(board_to_check)
         for child in children_list:
             children.push(child)
@@ -327,8 +448,6 @@ def main_depth():
         if i < 9:
             board += ',' 
 
-    board = "T,T,_,_,F,F"
-
     print(board)
 
     # start search
@@ -343,5 +462,8 @@ def main_depth():
     if nodes_visited is not None:
         print(nodes_visited)
 
+
 if __name__ == "__main__":
-    main_depth()
+    # main_depth()
+    # main_breadth()
+    pass
