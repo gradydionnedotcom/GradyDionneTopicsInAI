@@ -174,44 +174,46 @@ class Board:
         return value
 
     # max for min max search
-    def max_value(self, n):
+    def max_value(self, best_move, n):
         if self.is_leaf_node():
-            return self.v, n
+            return self.v, best_move, n
         
         children = self.get_left_options()
 
         if not children:
-            return self.v, n
+            return self.v, best_move, n
 
         value = float('-inf')
 
         for child in children:
             n += 1
             board = Board(child)
-            vnew, n = board.min_value(n)
+            vnew, best_move, n = board.min_value(best_move, n)
             if vnew > value: 
                 value = vnew
-            return value, n
+                best_move = child
+            return value, best_move, n
 
     # min for min max search
-    def min_value(self, n):
+    def min_value(self, best_move, n):
         if self.is_leaf_node():
-            return self.v, n
+            return self.v, best_move, n
         
         children = self.get_right_options()
 
         if not children:
-            return self.v, n
+            return self.v, best_move, n
         
         value = float('inf')
 
         for child in children:
             n += 1
             board = Board(child)
-            vnew, n = board.max_value(n)
+            vnew, best_move, n = board.max_value(best_move, n)
             if vnew < value: 
                 value = vnew
-            return value, n
+                best_move = child
+            return value, best_move, n
         
     '''
     Problem 2: Alpha Beta Pruning
@@ -220,52 +222,54 @@ class Board:
 
 
     # pruning searches
-    def max_value_with_pruning(self, a, b, n):
+    def max_value_with_pruning(self, a, b, best_move, n):
         if self.is_leaf_node():
-            return self.v, n
+            return self.v, best_move, n
         
         children = self.get_left_options()
 
         if not children:
-            return self.v, n
+            return self.v, best_move, n
 
         value = float('-inf')
 
         for child in children:
             n += 1
             board = Board(child)
-            vnew, n = board.min_value_with_pruning(a, b, n)
+            vnew, best_move, n = board.min_value_with_pruning(a, b, best_move, n)
             if vnew > value: 
                 value = vnew
+                best_move = child
             if value >= b:
                 return value, n
             if vnew > a:
                 a = vnew
-            return value, n
+            return value, best_move, n
 
     # min for min max search
-    def min_value_with_pruning(self, a, b, n):
+    def min_value_with_pruning(self, a, b, best_move, n):
         if self.is_leaf_node():
-            return self.v, n
+            return self.v, best_move, n
         
         children = self.get_right_options()
 
         if not children:
-            return self.v, n
+            return self.v, best_move, n
         
         value = float('inf')
 
         for child in children:
             n += 1
             board = Board(child)
-            vnew, n = board.max_value_with_pruning(a, b, n)
+            vnew, best_move, n = board.max_value_with_pruning(a, b, best_move, n)
             if vnew < value: 
                 value = vnew
+                best_move = child
             if value <= a:
                 return value, n
             if vnew <= b:
                 b = vnew
-            return value, n
+            return value, best_move, n
         
 def test():
     for i in range(5):
@@ -277,13 +281,14 @@ def test():
 
         test = Board(board)
         
-        test_case, n = Board.min_value(test, 0)
+        test_case, best_move, n = Board.min_value(test, None, 1)
 
-        print(f"Gameoard: {board}\nScore: {test_case}\nNodes Visited: {n}")
+        print(f"Gameoard: {board}\nScore: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
         if test_case > 0:
             print('Toad Win, Frogs Moving First\n\n')
         if test_case <= 0:
             print('Frog Win, Frogs Moving First\n\n')
+            
 
     for i in range(5):
         board = ''
@@ -294,9 +299,9 @@ def test():
 
         test = Board(board)
         
-        test_case, n = Board.max_value(test, 0)
+        test_case, best_move, n = Board.max_value(test, None, 1)
 
-        print(f"Gameoard: {board}\nScore: {test_case}\nNodes Visited: {n}")
+        print(f"Gameoard: {board}\nScore: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
         if test_case > 0:
             print('Toad Win, Toads Moving First\n\n')
         if test_case <= 0:
@@ -312,9 +317,9 @@ def ab_test(a, b):
 
         test = Board(board)
         
-        test_case, n = Board.min_value_with_pruning(test, a, b, 0)
+        test_case, best_move, n = Board.min_value_with_pruning(test, a, b, None, 1)
 
-        print(f"AB Gameoard: {board}\nScore w/ Pruning: {test_case}\nNodes Visited: {n}")
+        print(f"AB Gameoard: {board}\nScore w/ Pruning: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
         if test_case > 0:
             print('Toad Win, Frogs Moving First\n\n')
         if test_case <= 0:
@@ -329,9 +334,9 @@ def ab_test(a, b):
 
         test = Board(board)
         
-        test_case, n = Board.max_value_with_pruning(test, a, b, 0)
+        test_case, best_move, n = Board.max_value_with_pruning(test, a, b, None, 1)
 
-        print(f"AB Gameoard: {board}\nScore w/ Pruning: {test_case}\nNodes Visited: {n}")
+        print(f"AB Gameoard: {board}\nScore w/ Pruning: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
         if test_case > 0:
             print('Toad Win, Toads Moving First\n\n')
         if test_case <= 0:
@@ -349,3 +354,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
