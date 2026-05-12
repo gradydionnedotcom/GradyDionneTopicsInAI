@@ -305,10 +305,9 @@ class Board:
                 b = vnew
         return value, best_move, n
         
-
-
-
-
+'''
+Problem 3 - testing functions
+'''
 
 
 def test():
@@ -347,6 +346,10 @@ def test():
         if test_case <= 0:
             print('Frog Win, Toads Moving First\n\n')
 
+'''
+3 part 2: ab testing
+'''
+
 def ab_test(a, b):
     for i in range(5):
         board = ''
@@ -382,7 +385,9 @@ def ab_test(a, b):
         if test_case <= 0:
             print('Frog Win, Toads Moving First\n\n')
     
-
+'''
+Other stuff from an older assignment
+'''
 
 class unique_element:
     def __init__(self, value, occurrences):
@@ -452,6 +457,9 @@ def test_all_combos():
         if test_case <= 0:
             print('Frog Win, Toads Moving First\n\n')
 
+'''
+Additional test - player plays against itself
+'''
 
 
 def single_game_state_test(board, turn):
@@ -476,6 +484,9 @@ def single_game_state_test(board, turn):
             print('Toad Win, Toad Move\n\n')
         return best_move, 'R'
 
+'''
+Main function
+'''
 
 def main():
 
