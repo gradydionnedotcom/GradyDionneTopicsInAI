@@ -15,12 +15,12 @@ class Board:
         self.num_toads = 0
 
         for i in range (len(self.board)):
-            if self.board[i] == 'T':
+            if self.board[i] == 'F':
                 self.num_frogs += 1
             if self.board[i] == 'T':
                 self.num_toads += 1
 
-        self.v = self.board_value()
+        self.v = 0
 
     # get left/right options function from daily 2 + 3
     def has_left_options(self):
@@ -114,7 +114,7 @@ class Board:
             return False
         return True
 
-    def board_value(self):
+    def left_board_value(self, board):
         # some evaluations for how good a board
 
         value = 0
@@ -124,7 +124,7 @@ class Board:
         right_moves = 0
 
         # look at every spot
-        for i in range (len(self.board)):
+        for i in range (board.size):
 
             # 2 in a row for toad
             if self.board[i] == 'T' and self.board[i + 1] == 'T':
@@ -139,16 +139,55 @@ class Board:
                 value += round(i/2)
                 if i + 2 < self.size:
                     if self.board[i + 1] == "_":
-                        value += self.size - i
+                        value += round((self.size - i)/2)
                         left_moves += 1
                     elif i + 2 < self.size:
                         if self.board[i + 1] == "F" and self.board[i + 2] == "_":
-                            value += round((self.size - i)/2)
+                            value += board.size - i
                             left_moves += 1
+            
+            # blocked moves
+            if board.size > i + 3:
+                if self.board[i] == "T" and self.board[i + 1] == '_' and self.board[i + 2] == 'F' and self.board[i + 3] == "F":
+                    value -= 10
+            
+            if i > 3:
+                if self.board[i] == "F" and self.board[i - 1] == '_' and self.board[i - 2] == 'T' and self.board[i - 3] == "T":
+                    value += 10
+
+            # face off?
+            if self.board[i] == "T" and self.board[i + 1] == "F":
+                value += 20
+
+        # number of total moves
+        value += (left_moves * 5)
+        value -= (right_moves * 5)
+
+        return value
+    
+    def right_board_value(self, board):
+        # some evaluations for how good a board
+
+        value = 0
+
+        # evaluation variables
+        left_moves = 0
+        right_moves = 0
+
+        # look at every spot
+        for i in range (board.size):
+
+            # 2 in a row for toad
+            if self.board[i] == 'T' and self.board[i + 1] == 'T':
+                value += 2
+
+            # 2 in a row for frog
+            if self.board[i] == 'F' and self.board[i - 1] == 'F':
+                value -= 2
             
             # skips vs. one space moves and distance from the end for frogs
             if self.board[i] == 'F':
-                value -= round((self.size - 1 - i)/2)
+                value -= round((board.size - 1 - i)/2)
                 if i > 2:
                     if self.board[i - 1] == "_":
                         value -= i
@@ -159,13 +198,17 @@ class Board:
                             right_moves += 1
             
             # blocked moves
-            if self.size > i + 3:
+            if board.size > i + 3:
                 if self.board[i] == "T" and self.board[i + 1] == '_' and self.board[i + 2] == 'F' and self.board[i + 3] == "F":
                     value -= 10
             
             if i > 3:
                 if self.board[i] == "F" and self.board[i - 1] == '_' and self.board[i - 2] == 'T' and self.board[i - 3] == "T":
                     value += 10
+
+            # face off?
+            if self.board[i] == "T" and self.board[i + 1] == "F":
+                value -= 20
 
         # number of total moves
         value += (left_moves * 5)
@@ -188,6 +231,7 @@ class Board:
         for child in children:
             n += 1
             board = Board(child)
+            board.v = self.left_board_value(board)
             vnew, best_move, n = board.min_value(best_move, n)
             if vnew > value: 
                 value = vnew
@@ -209,6 +253,7 @@ class Board:
         for child in children:
             n += 1
             board = Board(child)
+            board.v = self.right_board_value(board)
             vnew, best_move, n = board.max_value(best_move, n)
             if vnew < value: 
                 value = vnew
@@ -342,6 +387,48 @@ def ab_test(a, b):
         if test_case <= 0:
             print('Frog Win, Toads Moving First\n\n')
     
+class unique_element:
+    def __init__(self, value, occurrences):
+        self.value = value
+        self.occurrences = occurrences
+
+def perm_unique(elements):
+    e_set=set(elements)
+    list_unique = [unique_element(i,elements.count(i)) for i in e_set]
+    u=len(elements)
+    return perm_unique_helper(list_unique,[0]*u,u-1)
+
+def perm_unique_helper(list_unique, result_list, d):
+    if d < 0:
+        yield tuple(result_list)
+    else:
+        for i in list_unique:
+            if i.occurrences > 0:
+                result_list[d]=i.value
+                i.occurrences-=1
+                for j in  perm_unique_helper(list_unique, result_list, d-1):
+                    yield j
+                i.occurrences+=1
+
+# function to find said permutations
+def all_combos_with_given_values(n: int, t: int, f: int):
+
+    board = []
+
+    # add all the stuff to the list
+    for _ in range(t):
+        board.append('T')
+
+    for _ in range(n - t - f):
+        board.append('_')
+
+    for _ in range(f):
+        board.append('F')
+
+    # find permutations
+        
+    return [",".join(c) for c in perm_unique(board)]
+
 def main():
 
     print(test())
@@ -349,10 +436,8 @@ def main():
     a = float("-inf")
     b = float("inf")
 
-    print(ab_test(a, b))
+    # print(ab_test(a, b))
 
 
 if __name__ == '__main__':
     main()
-
-
