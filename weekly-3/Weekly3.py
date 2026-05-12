@@ -36,7 +36,7 @@ class Board:
 
     def has_right_options(self):
 
-        for i in range (len(self.board)-1, 1, -1):
+        for i in range (len(self.board)-1, -1, -1):
             if self.board[i] == 'F':
                 if self.board[i - 1] == '_':
                     return True
@@ -77,32 +77,22 @@ class Board:
         return possible_moves
 
     def get_right_options(self):
-
         possible_moves = []
 
-        for i in range (len(self.board)-1, 1, -1):
+        for i in range(len(self.board) - 1, -1, -1):
             if self.board[i] == 'F':
-                if self.board[i - 1] == '_':
-
+                if i - 1 >= 0 and self.board[i - 1] == '_':
                     child = self.board.copy()
                     child[i] = '_'
                     child[i - 1] = 'F'
                     possible_moves.append(",".join(child))
 
-                    # old stuff
-                    # possible_moves.append([position, 'move to the next empty space'])
+                elif i - 2 >= 0 and self.board[i - 1] == 'T' and self.board[i - 2] == '_':
+                    child = self.board.copy()
+                    child[i] = '_'
+                    child[i - 2] = 'F'
+                    possible_moves.append(",".join(child))
 
-                elif self.board[i - 1] == 'T' and i - 2 >= 0:
-                    if self.board[i - 2] == '_':
-                        
-                        child = self.board.copy()
-                        child[i] = '_'
-                        child[i - 2] = 'F'
-                        possible_moves.append(",".join(child))
-
-                        # old stuff again
-                        # possible_moves.append([position, 'jump over a toad to empty an space'])
-        
         return possible_moves
 
 
@@ -124,39 +114,37 @@ class Board:
         right_moves = 0
 
         # look at every spot
-        for i in range (board.size):
+        for i in range (board.size - 1):
 
-            # 2 in a row for toad
-            if self.board[i] == 'T' and self.board[i + 1] == 'T':
-                value += 2
+            if board.board[i] == 'T' and board.board[i + 1] == 'T':
+                value += 5
 
-            # 2 in a row for frog
-            if self.board[i] == 'F' and self.board[i - 1] == 'F':
-                value -= 2
+            if board.board[i] == 'F' and board.board[i + 1] == 'F':
+                value -= 5
 
             # skips vs. one space moves and distance from the end for toads
-            if self.board[i] == 'T':
+            if board.board[i] == 'T':
                 value += round(i/2)
                 if i + 2 < self.size:
-                    if self.board[i + 1] == "_":
+                    if board.board[i + 1] == "_":
                         value += round((self.size - i)/2)
                         left_moves += 1
                     elif i + 2 < self.size:
-                        if self.board[i + 1] == "F" and self.board[i + 2] == "_":
+                        if board.board[i + 1] == "F" and board.board[i + 2] == "_":
                             value += board.size - i
                             left_moves += 1
             
             # blocked moves
-            if board.size > i + 3:
-                if self.board[i] == "T" and self.board[i + 1] == '_' and self.board[i + 2] == 'F' and self.board[i + 3] == "F":
-                    value -= 10
+            if board.size > i + 2:
+                if board.board[i] == "T" and board.board[i + 1] == 'F' and board.board[i + 2] == 'F':
+                    value -= 15
             
-            if i > 3:
-                if self.board[i] == "F" and self.board[i - 1] == '_' and self.board[i - 2] == 'T' and self.board[i - 3] == "T":
-                    value += 10
+            if i > 2:
+                if board.board[i] == "F" and board.board[i - 1] == 'T' and board.board[i - 2] == 'T':
+                    value += 15
 
             # face off?
-            if self.board[i] == "T" and self.board[i + 1] == "F":
+            if board.board[i] == "T" and board.board[i + 1] == "F":
                 value += 20
 
         # number of total moves
@@ -175,39 +163,37 @@ class Board:
         right_moves = 0
 
         # look at every spot
-        for i in range (board.size):
+        for i in range (board.size - 1):
 
-            # 2 in a row for toad
-            if self.board[i] == 'T' and self.board[i + 1] == 'T':
-                value += 2
+            if board.board[i] == 'T' and board.board[i + 1] == 'T':
+                value += 5
 
-            # 2 in a row for frog
-            if self.board[i] == 'F' and self.board[i - 1] == 'F':
-                value -= 2
+            if board.board[i] == 'F' and board.board[i + 1] == 'F':
+                value -= 5
             
             # skips vs. one space moves and distance from the end for frogs
-            if self.board[i] == 'F':
+            if board.board[i] == 'F':
                 value -= round((board.size - 1 - i)/2)
                 if i > 2:
-                    if self.board[i - 1] == "_":
+                    if board.board[i - 1] == "_":
                         value -= i
                         right_moves += 1
-                    elif self.board[i - 1] == 'T':
-                        if self.board[i - 2] == '_':
+                    elif board.board[i - 1] == 'T':
+                        if board.board[i - 2] == '_':
                             value -= round(i/2)
                             right_moves += 1
             
             # blocked moves
-            if board.size > i + 3:
-                if self.board[i] == "T" and self.board[i + 1] == '_' and self.board[i + 2] == 'F' and self.board[i + 3] == "F":
-                    value -= 10
+            if board.size > i + 2:
+                if board.board[i] == "T" and board.board[i + 1] == 'F' and board.board[i + 2] == 'F':
+                    value += 25
             
-            if i > 3:
-                if self.board[i] == "F" and self.board[i - 1] == '_' and self.board[i - 2] == 'T' and self.board[i - 3] == "T":
-                    value += 10
+            if i > 2:
+                if board.board[i] == "F" and board.board[i - 1] == 'T' and board.board[i - 2] == 'T':
+                    value -= 25
 
             # face off?
-            if self.board[i] == "T" and self.board[i + 1] == "F":
+            if board.board[i] == "T" and board.board[i + 1] == "F":
                 value -= 20
 
         # number of total moves
@@ -215,6 +201,8 @@ class Board:
         value -= (right_moves * 5)
 
         return value
+
+
 
     # max for min max search
     def max_value(self, best_move, n):
@@ -232,11 +220,11 @@ class Board:
             n += 1
             board = Board(child)
             board.v = self.left_board_value(board)
-            vnew, best_move, n = board.min_value(best_move, n)
+            vnew, _, n = board.min_value(best_move, n)
             if vnew > value: 
                 value = vnew
                 best_move = child
-            return value, best_move, n
+        return value, best_move, n
 
     # min for min max search
     def min_value(self, best_move, n):
@@ -254,16 +242,15 @@ class Board:
             n += 1
             board = Board(child)
             board.v = self.right_board_value(board)
-            vnew, best_move, n = board.max_value(best_move, n)
+            vnew, _, n = board.max_value(best_move, n)
             if vnew < value: 
                 value = vnew
                 best_move = child
-            return value, best_move, n
+        return value, best_move, n
         
     '''
     Problem 2: Alpha Beta Pruning
     '''
-
 
 
     # pruning searches
@@ -281,15 +268,16 @@ class Board:
         for child in children:
             n += 1
             board = Board(child)
-            vnew, best_move, n = board.min_value_with_pruning(a, b, best_move, n)
+            board.v = self.left_board_value(board)
+            vnew, _, n = board.min_value_with_pruning(a, b, best_move, n)
             if vnew > value: 
                 value = vnew
                 best_move = child
             if value >= b:
-                return value, n
+                return value, best_move, n
             if vnew > a:
                 a = vnew
-            return value, best_move, n
+        return value, best_move, n
 
     # min for min max search
     def min_value_with_pruning(self, a, b, best_move, n):
@@ -306,23 +294,30 @@ class Board:
         for child in children:
             n += 1
             board = Board(child)
-            vnew, best_move, n = board.max_value_with_pruning(a, b, best_move, n)
+            board.v = self.right_board_value(board)
+            vnew, _, n = board.max_value_with_pruning(a, b, best_move, n)
             if vnew < value: 
                 value = vnew
                 best_move = child
             if value <= a:
-                return value, n
+                return value, best_move, n
             if vnew <= b:
                 b = vnew
-            return value, best_move, n
+        return value, best_move, n
         
+
+
+
+
+
+
 def test():
     for i in range(5):
         board = ''
         value = ['T','_','F']
         for i in range(random.randint(7, 15)):
-            board += (random.choice(value))
-            board += ','
+            board_list = [random.choice(value) for _ in range(random.randint(7,15))]
+            board = ",".join(board_list)
 
         test = Board(board)
         
@@ -339,8 +334,8 @@ def test():
         board = ''
         value = ['T','_','F']
         for i in range(random.randint(7, 15)):
-            board += (random.choice(value))
-            board += ','
+            board_list = [random.choice(value) for _ in range(random.randint(7,15))]
+            board = ",".join(board_list)
 
         test = Board(board)
         
@@ -357,8 +352,8 @@ def ab_test(a, b):
         board = ''
         value = ['T','_','F']
         for i in range(random.randint(7, 15)):
-            board += (random.choice(value))
-            board += ','
+            board_list = [random.choice(value) for _ in range(random.randint(7,15))]
+            board = ",".join(board_list)
 
         test = Board(board)
         
@@ -374,8 +369,8 @@ def ab_test(a, b):
         board = ''
         value = ['T','_','F']
         for i in range(random.randint(7, 15)):
-            board += (random.choice(value))
-            board += ','
+            board_list = [random.choice(value) for _ in range(random.randint(7,15))]
+            board = ",".join(board_list)
 
         test = Board(board)
         
@@ -387,6 +382,8 @@ def ab_test(a, b):
         if test_case <= 0:
             print('Frog Win, Toads Moving First\n\n')
     
+
+
 class unique_element:
     def __init__(self, value, occurrences):
         self.value = value
@@ -429,13 +426,82 @@ def all_combos_with_given_values(n: int, t: int, f: int):
         
     return [",".join(c) for c in perm_unique(board)]
 
+def test_all_combos():
+
+    board_list = all_combos_with_given_values(6,2,2)
+
+    for board in board_list:
+        test = Board(board)
+        
+        test_case, best_move, n = Board.min_value(test, None, 1)
+
+        print(f"Gameoard: {board}\nScore: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
+        if test_case > 0:
+            print('Toad Win, Frogs Moving First\n\n')
+        if test_case <= 0:
+            print('Frog Win, Frogs Moving First\n\n')
+
+    for board in board_list:
+        test = Board(board)
+        
+        test_case, best_move, n = Board.max_value(test, None, 1)
+
+        print(f"Gameoard: {board}\nScore: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
+        if test_case > 0:
+            print('Toad Win, Toads Moving First\n\n')
+        if test_case <= 0:
+            print('Frog Win, Toads Moving First\n\n')
+
+
+
+def single_game_state_test(board, turn):
+
+    gameboard = board.board
+
+    if turn == 'R':
+        test_case, best_move, n = board.max_value(None, 1)
+        print(f"Gameoard: {gameboard}\nScore: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
+        if test_case <= 0:
+            print('Frog Win, Frog Move\n\n')
+        elif test_case > 0:
+            print('Toad Win, Frog Move\n\n')
+        return best_move, 'L'
+    
+    elif turn == 'L':
+        test_case, best_move, n = board.min_value(None, 1)
+        print(f"Gameoard: {gameboard}\nScore: {test_case}\nNodes Visited: {n}\n Best Move: {best_move}")
+        if test_case <= 0:
+            print('Frog Win, Toad Move\n\n')
+        elif test_case > 0:
+            print('Toad Win, Toad Move\n\n')
+        return best_move, 'R'
+
+
 def main():
 
-    print(test())
+    # print(test_all_combos())
+
+    board = "T,T,T,_,_,_,F,F,F"
+
+    turn = 'R'
+
+    state = Board(board)
+
+    while state.has_left_options() or state.has_right_options():
+
+        child, turn = single_game_state_test(state, turn)
+
+        if child is None:
+            print("No more valid moves.")
+            break
+
+        state = Board(child)
+
 
     a = float("-inf")
     b = float("inf")
 
+    # print(test())
     # print(ab_test(a, b))
 
 
