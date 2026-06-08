@@ -247,8 +247,8 @@ class Board:
         return value
 
     # pruning searches
-    def max_value_with_pruning(self, a, b, best_move, n):
-        if self.is_leaf_node():
+    def max_value_with_pruning(self, a, b, best_move, n, max_depth, depth = 0):
+        if self.is_leaf_node() or depth >= max_depth:
             return self.v, best_move, n
         
         children = self.get_left_options()
@@ -262,7 +262,7 @@ class Board:
             n += 1
             board = Board(child)
             board.v = self.left_board_value(board)
-            vnew, _, n = board.min_value_with_pruning(a, b, best_move, n)
+            vnew, _, n = board.min_value_with_pruning(a, b, best_move, n, max_depth, depth + 1)
             if vnew > value: 
                 value = vnew
                 best_move = child
@@ -273,8 +273,8 @@ class Board:
         return value, best_move, n
 
     # min for min max search
-    def min_value_with_pruning(self, a, b, best_move, n):
-        if self.is_leaf_node():
+    def min_value_with_pruning(self, a, b, best_move, n, max_depth, depth = 0):
+        if self.is_leaf_node() or depth >= max_depth:
             return self.v, best_move, n
         
         children = self.get_right_options()
@@ -288,7 +288,7 @@ class Board:
             n += 1
             board = Board(child)
             board.v = self.right_board_value(board)
-            vnew, _, n = board.max_value_with_pruning(a, b, best_move, n)
+            vnew, _, n = board.max_value_with_pruning(a, b, best_move, n, max_depth, depth + 1)
             if vnew < value: 
                 value = vnew
                 best_move = child
@@ -313,7 +313,7 @@ def main():
 
     # size variables
     board_size = 7          
-    MIN_SIZE, MAX_SIZE = 5, 13
+    MIN_SIZE, MAX_SIZE = 5, 15
 
     '''
     Menu Loop
@@ -377,6 +377,11 @@ def main():
     '''
     Main Game Loop
     '''
+    timer = 0
+    delay = 500
+    computer_delay = False
+    max_depth = max(3, 9 - (board_size - 9))
+
     game = True
     while game == True:
         clock.tick(60)
@@ -409,27 +414,27 @@ def main():
                     new_board_list = gameboard.make_move_toad(int(clicked_cell))
                     gameboard = Board(",".join(new_board_list))
                     print("Player moved:", ",".join(gameboard.board))  
+                    if not gameboard.has_right_options():
+                        game = False
                     current_turn = computer
 
-            timer = None
-            delay = 5
-
-            if current_turn == computer:
-                #if timer is None:
-                    #timer = pygame.time.get_ticks()
-
-                #elif pygame.time.get_ticks() - timer > delay:
-                    if gameboard.has_right_options():
-                        test_case, best_move, n = Board.min_value_with_pruning(gameboard, a, b, None, 1)
+        if current_turn == computer:
+            if not computer_delay:
+                timer = pygame.time.get_ticks()
+                computer_delay = True
+            if computer_delay and pygame.time.get_ticks() - timer > delay:
+                if gameboard.has_right_options():
+                    test_case, best_move, n = Board.min_value_with_pruning(gameboard, a, b, None, 1, max_depth)
+                    if best_move is not None:
                         gameboard = (Board(best_move))
-                        print("Computer moved:", ",".join(gameboard.board))  
-                        current_turn = player
-                #timer = None
+                    print("Computer moved:", ",".join(gameboard.board))  
+                    current_turn = player
+                computer_delay = False
+                if not gameboard.has_left_options():
+                    game = False
 
         pygame.display.flip()
 
-        if not gameboard.has_left_options() or not gameboard.has_right_options():
-            game = False
 
     '''
     End screen
@@ -438,15 +443,24 @@ def main():
     end = True
     while end:
         clock.tick(60)
-        screen.fill((20, 80, 20))
+        screen.fill((0, 0, 0))
 
-        msg = font_big.render(winner, True, (255, 255, 100))
-        screen.blit(msg, (screen.get_width() // 2 - msg.get_width() // 2,
-                          screen.get_height() // 2 - msg.get_height() // 2))
+        # Draw board cells
+        for i in range(board_size):
+            background_gif.render(screen, (i * CELL_WIDTH, 0))
 
-        sub = font_small.render("Press R to restart  |  Q to quit", True, (200, 200, 200))
-        screen.blit(sub, (screen.get_width() // 2 - sub.get_width() // 2,
-                          screen.get_height() // 2 + 60))
+        # Draw pieces based on board state
+        for i, cell in enumerate(gameboard.board):
+            if cell == 'T':
+                screen.blit(toad_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
+            elif cell == 'F':
+                screen.blit(frog_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
+
+        winner_text = font_big.render(winner, True, (0, 50, 0))
+        screen.blit(winner_text, (screen.get_width() // 2 - winner_text.get_width() // 2,screen.get_height() // 2 - winner_text.get_height() * 1.75))
+
+        bottom_text = font_small.render("Press R to restart  |  Q to quit", True, (0, 50, 0))
+        screen.blit(bottom_text, (screen.get_width() // 2 - bottom_text.get_width() // 2, screen.get_height() // 2 + 60))
 
         pygame.display.flip()
 
@@ -455,7 +469,7 @@ def main():
                 end = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    main()   # restart from the top
+                    main()
                     return
                 elif event.key == pygame.K_q:
                     end = False
