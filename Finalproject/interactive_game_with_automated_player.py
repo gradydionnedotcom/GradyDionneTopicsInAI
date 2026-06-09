@@ -33,14 +33,12 @@ class Board:
         return False
 
     def has_right_options(self):
-
-        for i in range (len(self.board)-1, -1, -1):
+        for i in range(len(self.board)-1, -1, -1):
             if self.board[i] == 'F':
-                if self.board[i - 1] == '_':
+                if i - 1 >= 0 and self.board[i - 1] == '_':
                     return True
-                elif self.board[i - 1] == 'T' and i - 2 >= 0:
-                    if self.board[i - 2] == '_':
-                        return True
+                elif i - 2 >= 0 and self.board[i - 1] == 'T' and self.board[i - 2] == '_':
+                    return True
         return False
     
     def valid_move_toad(self, pos):
@@ -60,7 +58,7 @@ class Board:
                 if self.board[pos - 1] == '_':
                     return True
                 if pos >= 2:
-                    if self.board[pos - 1] == "F" and self.board[pos - 2] == "_":
+                    if self.board[pos - 1] == "T" and self.board[pos - 2] == "_":
                         return True
             
         return False
@@ -83,7 +81,7 @@ class Board:
             moved_board[pos] = '_'
             moved_board[pos - 1] = 'F'
 
-        elif self.board[pos - 1] == "T" and self.board[pos + 2] == "_":
+        elif self.board[pos - 1] == "T" and self.board[pos - 2] == "_":
             moved_board[pos] = '_'
             moved_board[pos - 2] = "F"
 
@@ -318,6 +316,10 @@ def main():
     '''
     Menu Loop
     '''
+    player = 'T'
+    computer = 'F'
+    current_player_display = 'Toads'
+
     in_menu = True
     while in_menu:
         clock.tick(60)
@@ -327,10 +329,17 @@ def main():
         screen.blit(title, (MENU_W // 2 - title.get_width() // 2, 60))
 
         size_text = font_small.render(f"Board size:  {board_size}", True, (255, 200, 50))
-        screen.blit(size_text, (MENU_W // 2 - size_text.get_width() // 2, 180))
+        screen.blit(size_text, (350, 180))
 
-        hint = font_small.render("Press arrow keys to change  | Press ENTER to start", True, (0, 255, 255))
-        screen.blit(hint, (MENU_W // 2 - hint.get_width() // 2, 240))
+        hint = font_small.render("Arrow keys to adjust board size  |  ENTER to start", True, (100, 150, 200))
+        screen.blit(hint, (38, 240))
+
+        player_selection = font_small.render("Press 'T' for Toads, 'F' for Frogs, or 'R' for Rules", True, (100, 150, 200))
+        screen.blit(player_selection, (60, 300))
+
+
+        current_player = font_small.render(f"Player: {current_player_display}", True, (255, 200, 50))
+        screen.blit(current_player, (100, 180))
 
         pygame.display.flip()
 
@@ -343,8 +352,32 @@ def main():
                     board_size -= 2          
                 elif event.key == pygame.K_RIGHT and board_size < MAX_SIZE:
                     board_size += 2
+
+                elif event.key == pygame.K_t:
+                    player = 'T'
+                    computer = 'F'
+                    current_player_display = 'Toads'
+                elif event.key == pygame.K_f:
+                    player = 'F'
+                    computer = 'T'
+                    current_player_display = 'Frogs'
+
                 elif event.key == pygame.K_RETURN:
-                    in_menu = False        
+                    in_menu = False    
+
+                elif event.key == pygame.K_r:
+                    in_tutorial = True
+                    tutorial_image = pygame.transform.scale(pygame.image.load("tutorial.png"), (600, 400))
+                    while in_tutorial:
+                        clock.tick(60)
+                        screen.fill((20, 80, 20))
+                        screen.blit(tutorial_image, (0, 0))
+                        pygame.display.flip()
+                        for event in pygame.event.get():
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_RETURN:
+                                    in_tutorial = False
+
 
     '''
     Initialize game here
@@ -369,77 +402,144 @@ def main():
     icon_x_offset = (CELL_WIDTH - ICON_SCALE[0]) // 2
     icon_y_offset = (CELL_HEIGHT - ICON_SCALE[1]) // 2
 
-    player = 'T'
-    computer = 'F'
     current_turn = player
     a, b = float('-inf'), float('inf')
+
+    timer = 0
+    delay = 500
+    computer_delay = False
+    max_depth = (9 - (board_size - 9))
+    new_board_list = board
 
     '''
     Main Game Loop
     '''
-    timer = 0
-    delay = 500
-    computer_delay = False
-    max_depth = max(3, 9 - (board_size - 9))
 
-    game = True
-    while game == True:
-        clock.tick(60)
-        screen.fill((0, 0, 0))
+    if player == 'T':
+        game_right = True
+        while game_right == True:
+            clock.tick(60)
+            screen.fill((0, 0, 0))
 
-        # Draw board cells
-        for i in range(board_size):
-            background_gif.render(screen, (i * CELL_WIDTH, 0))
+            # Draw board cells
+            for i in range(board_size):
+                background_gif.render(screen, (i * CELL_WIDTH, 0))
 
-        # Draw pieces based on board state
-        for i, cell in enumerate(gameboard.board):
-            if cell == 'T':
-                screen.blit(toad_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
-            elif cell == 'F':
-                screen.blit(frog_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
+            # Draw pieces based on board state
+            for i, cell in enumerate(gameboard.board):
+                if cell == 'T':
+                    screen.blit(toad_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
+                elif cell == 'F':
+                    screen.blit(frog_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
 
-        # process input
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_x, mouse_y = event.pos
-                clicked_cell = mouse_x // CELL_WIDTH  
+            # process input
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_x, mouse_y = event.pos
+                    clicked_cell = mouse_x // CELL_WIDTH  
 
-                # which cell was clicked for testing dolphins (porpoises)
-                print(f"Clicked cell {int(clicked_cell)}: {board[int(clicked_cell)]}")
-                print(gameboard)
+                    # which cell was clicked for testing dolphins (porpoises)
+                    print(f"Clicked cell {int(clicked_cell)}: {new_board_list[int(clicked_cell)]}")
+                    print(gameboard)
 
-                if current_turn == player and gameboard.valid_move_toad(int(clicked_cell)):
-                    new_board_list = gameboard.make_move_toad(int(clicked_cell))
-                    gameboard = Board(",".join(new_board_list))
-                    print("Player moved:", ",".join(gameboard.board))  
-                    if not gameboard.has_right_options():
-                        game = False
-                    current_turn = computer
+                    if current_turn == player and gameboard.valid_move_toad(int(clicked_cell)):
+                        new_board_list = gameboard.make_move_toad(int(clicked_cell))
+                        gameboard = Board(",".join(new_board_list))
+                        print("Player moved:", ",".join(gameboard.board))  
+                        if not gameboard.has_right_options():
+                            game_right = False
+                        current_turn = computer
+            
+            if not gameboard.has_right_options() or not gameboard.has_left_options():
+                    game_right = False
 
-        if current_turn == computer:
-            if not computer_delay:
-                timer = pygame.time.get_ticks()
-                computer_delay = True
-            if computer_delay and pygame.time.get_ticks() - timer > delay:
-                if gameboard.has_right_options():
-                    test_case, best_move, n = Board.min_value_with_pruning(gameboard, a, b, None, 1, max_depth)
-                    if best_move is not None:
-                        gameboard = (Board(best_move))
-                    print("Computer moved:", ",".join(gameboard.board))  
-                    current_turn = player
-                computer_delay = False
-                if not gameboard.has_left_options():
-                    game = False
+            if current_turn == computer:
+                if not computer_delay:
+                    timer = pygame.time.get_ticks()
+                    computer_delay = True
+                if computer_delay and pygame.time.get_ticks() - timer > delay:
+                    if gameboard.has_right_options():
+                        test_case, best_move, n = Board.min_value_with_pruning(gameboard, a, b, None, 1, max_depth)
+                        if best_move is not None:
+                            gameboard = (Board(best_move))
+                        print("Computer moved:", ",".join(gameboard.board))  
+                        current_turn = player
+                    computer_delay = False
 
-        pygame.display.flip()
+            pygame.display.flip()
+
+
+    if player == "F":
+        current_turn = computer
+        game_left = True
+        while game_left == True:
+            clock.tick(60)
+            screen.fill((0, 0, 0))
+
+            # Draw board cells
+            for i in range(board_size):
+                background_gif.render(screen, (i * CELL_WIDTH, 0))
+
+            # Draw pieces based on board state
+            for i, cell in enumerate(gameboard.board):
+                if cell == 'T':
+                    screen.blit(toad_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
+                elif cell == 'F':
+                    screen.blit(frog_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
+
+            # process input
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game_left = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_x, mouse_y = event.pos
+                    clicked_cell = mouse_x // CELL_WIDTH  
+
+                    # which cell was clicked for testing dolphins (porpoises)
+                    print(f"Clicked cell {int(clicked_cell)}: {new_board_list[int(clicked_cell)]}")
+                    print(gameboard)
+
+                    if current_turn == player and gameboard.valid_move_frog(int(clicked_cell)):
+                        new_board_list = gameboard.make_move_frog(int(clicked_cell))
+                        gameboard = Board(",".join(new_board_list))
+                        print("Player moved:", ",".join(gameboard.board))  
+                        if not gameboard.has_left_options():
+                            game_left = False
+                        current_turn = computer
+
+            if not gameboard.has_right_options() or not gameboard.has_left_options():
+                    game_left = False
+            
+            if current_turn == computer:
+                if not computer_delay:
+                    timer = pygame.time.get_ticks()
+                    computer_delay = True
+                if computer_delay and pygame.time.get_ticks() - timer > delay:
+                    if gameboard.has_left_options():
+                        test_case, best_move, n = Board.max_value_with_pruning(gameboard, a, b, None, 1, max_depth)
+                        if best_move is not None:
+                            gameboard = (Board(best_move))
+                        print("Computer moved:", ",".join(gameboard.board))  
+                        current_turn = player
+                
+                    else:
+                        game_left = False
+                    computer_delay = False
+
+            print(f"Current turn: {current_turn}, has_left: {gameboard.has_left_options()}, has_right: {gameboard.has_right_options()}, game_left: {game_left}")
+
+            pygame.display.flip()
 
 
     '''
     End screen
     '''
-    winner = "Toads win!" if not gameboard.has_right_options() else "Frogs win!"
+    if not gameboard.has_left_options():
+        winner = "Frogs win"
+    else:
+        winner = "Toads win"
     end = True
     while end:
         clock.tick(60)
@@ -456,11 +556,13 @@ def main():
             elif cell == 'F':
                 screen.blit(frog_image, (i * CELL_WIDTH + icon_x_offset, icon_y_offset))
 
+        pygame.draw.rect(screen, (150, 210, 220), (screen.get_width() // 2 - 350 // 2, screen.get_height() // 2 - 125 // 2, 350, 125))
+
         winner_text = font_big.render(winner, True, (0, 50, 0))
-        screen.blit(winner_text, (screen.get_width() // 2 - winner_text.get_width() // 2,screen.get_height() // 2 - winner_text.get_height() * 1.75))
+        screen.blit(winner_text, (screen.get_width() // 2 - winner_text.get_width() // 2, screen.get_height() // 2 - 40))
 
         bottom_text = font_small.render("Press R to restart  |  Q to quit", True, (0, 50, 0))
-        screen.blit(bottom_text, (screen.get_width() // 2 - bottom_text.get_width() // 2, screen.get_height() // 2 + 60))
+        screen.blit(bottom_text, (screen.get_width() // 2 - bottom_text.get_width() // 2, screen.get_height() // 2 + 15))
 
         pygame.display.flip()
 
